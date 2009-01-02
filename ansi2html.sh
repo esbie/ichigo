@@ -31,8 +31,6 @@ body { font-family: Helvetica, Arial, sans-serif; }
 .b5 { background-color: #AA00AA; }
 .b6 { background-color: #00AAAA; }
 .b7 { background-color: #AAAAAA; }
-.code { background-color: #EEEEEE; padding-left: 1em; padding-bottom: 1em; }
-.top { font-size: 150%; }
 </style>
 </head>
 
@@ -58,7 +56,7 @@ then
   echo "<p>$3</p>"
 fi
 
-echo "<pre><div class='top'>"
+echo "<pre>"
 
 cat -v |
 #first line normalizes codes a little
@@ -67,8 +65,10 @@ s#\^\[\[1m\^\[\[\([34][0-7]m\)#^[[1;\1#; s#\^\[\[m#^[[0m#g; s#\^\[(B##g;
 s#\^\[\[0m#</span>#g;
 s#\^\[\[3\([0-7]\);4\([0-7]\)m#<span class="f\1 b\2">#g;
 s#\^\[\[1;3\([0-7]\);4\([0-7]\)m#<span class="bf\1 b\2">#g;
+# Force colored background in HTML output for red
 s#\^\[\[41m#<span style="background-color:\#AA0000">#g;
 s#\^\[\[4\([0-7]\)m#<span class="b\1">#g;
+# These three force colors into the HTML output for red, green, teal
 s#\^\[\[31m#<span style="color: \#AA0000;">#g;
 s#\^\[\[32m#<span style="color: \#00AA00;">#g;
 s#\^\[\[36m#<span style="color: \#00AAAA;">#g;
@@ -76,6 +76,6 @@ s#\^\[\[3\([0-7]\)m#<span class="f\1">#g;
 s#\^\[\[1;3\([0-7]\)m#<span class="bf\1">#g;
 s#\^\[\[1m#<span style="font-weight:bold">#g;'
 
-echo "</div></pre>
+echo "</pre>
 </body>
 </html>"

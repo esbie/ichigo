@@ -2,6 +2,7 @@
 package ichigo {
   import flash.display.*;
   import flash.events.*;
+  import flash.geom.Point;
 
   import ichigo.utils.Log;
 
@@ -19,8 +20,8 @@ package ichigo {
       child.graphics.endFill();
       addChild(child);
 
-	  var school:Flock = new Flock();
-	  addChild(school);
+      var school:Flock = new Flock();
+      addChild(school);
 
       buttonMode = true;
       useHandCursor = true;
@@ -31,7 +32,7 @@ package ichigo {
       Log.out("Clicked!");
     }
 
-    public static var mousePos:Object = {x: -1, y: -1};
+    public static var mousePos:Point = new Point(0,0);
 
     public function onMouseMove(evt:MouseEvent):void {
       mousePos.x = evt.stageX;

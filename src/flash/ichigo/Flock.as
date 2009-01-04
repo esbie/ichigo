@@ -4,10 +4,6 @@
 
 	import ichigo.utils.Log;
 
-	/**
-	 * ...
-	 * @author DefaultUser (Tools -> Custom Arguments...)
-	 */
 	public class Flock extends MovieClip {
 		public static var units:Array = [];
 
@@ -27,11 +23,11 @@
 		}
 
 		public static function onEnterFrame(evt:Event):void {
-			if(Main.mousePos.x > 0 || Main.mousePos.y > 0){
+			//if(Main.mousePos.x > 0 || Main.mousePos.y > 0){
 				for each (var value:Boid in units) {
 					value.updateBoid(Main.mousePos);
 				}
-			}
+			//}
 		}
 	}
 }

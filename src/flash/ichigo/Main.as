@@ -8,7 +8,6 @@ package ichigo {
 
   [SWF(width=100, height=100, backgroundColor=0x0B025B, frameRate=40)]
   public class Main extends MovieClip {
-
     public function Main () {
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;

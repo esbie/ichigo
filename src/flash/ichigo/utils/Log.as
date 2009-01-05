@@ -1,5 +1,10 @@
 /**
  * Allows logging to both trace() and firebug console.
+ *
+ * TODO: This could be further improved to support all classes and reflecting on
+ * their properties and reading the values one by one. I imagine this could get
+ * costly if used incorrectly. More than likely fdb is the right tool in
+ * situations when better debugging is needed so I'll leave it alone for now.
  */
 
 package ichigo.utils {
@@ -91,7 +96,6 @@ package ichigo.utils {
           if ("toString" in args) {
             return args.toString();
           }
-          trace("Unknown qualification: " + type);
           return "[object " + type + "]";
         break;
       }

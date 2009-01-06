@@ -16,12 +16,13 @@
     private var alignmentPercent:Number = 0.25;
     private var cohesionPercent:Number = 0.35;
     private var avoidancePercent:Number = 0.2;
-    private var momentumPercent:Number = 0.9;
+
+    private var momentumPercent:Number = 0.85;
 
     private var velocity:Point = new Point(0, 0);
-    private var speed:Number = 4;
-    private var personalSpace:Number = 5;
-    private var position:Point = new Point(0, 0);
+    private var speed:Number = 6;
+    private var personalSpace:Number = 100;
+    public var position:Point = new Point(0, 0);
 
     /*
      * the four steering behaviors of Boids
@@ -42,44 +43,65 @@
       Log.out("initialization complete");
     }
 
-    public function updateBoid(attractor:Point):void {
-      //calculate the unit vector for alignment
-      alignment = attractor.subtract(position);
-      alignment.normalize(1);
+    private function calcAlignment(attractor:Point, flock:Array, position:Point):Point {
+      var temp:Point = attractor.subtract(position);
+      temp.normalize(1);
+      return temp;
+    }
 
-      //TODO: elegant normalization of behavior percentages
-      //no flocking if only one fish
-      if (Flock.units.length == 1) {
-        velocity.x = alignment.x * (1 - momentumPercent) +
-            velocity.x * momentumPercent;
-        velocity.y = alignment.y * (1 - momentumPercent) +
-            velocity.y * momentumPercent;
-      }
-      else {
-        //calculate the unit vector for separation
-        for each (var neighbor:Boid in Flock.units) {
+    private function calcSeparation(attractor:Point, flock:Array, position:Point):Point {
+      var temp:Point = new Point(0, 0);
+      for each(var neighbor:Boid in flock) {
           if (Point.distance(neighbor.position, position) < personalSpace) {
             var difference:Point = neighbor.position.subtract(position);
             difference.normalize(1 / difference.length);
-            separation.offset(difference.x, difference.y);
+            temp.offset(difference.x, difference.y);
           }
-          cohesion.offset(neighbor.position.x, neighbor.position.y);
-        }
-        separation.normalize(1);
-
-        //calculate the unit vector for cohesion
-        cohesion.x = cohesion.x / Flock.units.length - position.x;
-        cohesion.y = cohesion.y / Flock.units.length - position.y;
-        cohesion.normalize(1);
-
-        //calculate velocity based on alignment, separation, and cohesion
-        velocity.x = velocity.x * momentumPercent + (alignment.x *
-            alignmentPercent - separation.x * separationPercent + cohesion.x *
-            cohesionPercent)*(1-momentumPercent);
-        velocity.y = velocity.y * momentumPercent + (alignment.y *
-            alignmentPercent - separation.y * separationPercent + cohesion.y *
-            cohesionPercent)*(1-momentumPercent);
       }
+      temp.normalize(-1);
+      return temp;
+    }
+
+    private function calcCohesion(attractor:Point, flock:Array, position:Point):Point {
+      var temp:Point = new Point(0, 0);
+      for each(var neighbor:Boid in flock) {
+        temp.offset(neighbor.position.x, neighbor.position.y);
+      }
+      temp.x = temp.x / flock.length - position.x;
+      temp.y = temp.y / flock.length - position.y;
+      temp.normalize(1);
+      return temp;
+    }
+
+    public function updateBoid(attractor:Point):void {
+      var behaviors:Array = [ { func: calcAlignment, perc: alignmentPercent },
+          { func: calcSeparation, perc: separationPercent },
+          { func: calcCohesion, perc: cohesionPercent } ];
+
+      var percentUsed:Number = 0.0;
+
+      //calculate the influence of each behavior
+      for each(var behavior:Object in behaviors) {
+        behavior.result = behavior.func(attractor, Flock.units, position);
+        if (behavior.result.length > 0) {
+          percentUsed += behavior.perc;
+        }
+      }
+
+      //calculate a normalizer in case some behaviors are not in effect
+      //watch our for divide by zero!
+      var normalizer:Number = (percentUsed==0)? 1 : 1 / percentUsed;
+      var temp:Point = new Point(0, 0);
+
+      //add together weighted behaviors
+      for each(var behav:Object in behaviors) {
+        temp.x += behav.result.x * behav.perc * normalizer;
+        temp.y += behav.result.y * behav.perc * normalizer;
+      }
+
+      //add behaviors to the Boid's current velocity's momentum
+      velocity.x = velocity.x * momentumPercent + temp.x * (1 - momentumPercent);
+      velocity.y = velocity.y * momentumPercent + temp.y * (1 - momentumPercent);
 
       //update position based on velocity
       position.offset(velocity.x * speed, velocity.y * speed);

@@ -19,7 +19,7 @@ package ichigo {
       child.graphics.endFill();
       addChild(child);
 
-      var school:Flock = new Flock();
+      var school:Flock = new Flock(12);
       addChild(school);
 
       buttonMode = true;

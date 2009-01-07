@@ -5,26 +5,20 @@
   import ichigo.utils.Log;
 
   public class Flock extends MovieClip {
-    public static var units:Array = [];
+    public var units:Array = [];
 
-    public function Flock() {
+    public function Flock(fleetSize:int) {
       addEventListener(Event.ENTER_FRAME, onEnterFrame);
-      var fish:Boid = new Boid();
-      addChild(fish);
-      units[0] = fish;
-
-      var fish2:Boid = new Boid();
-      addChild(fish2);
-      units[1] = fish2;
-
-      var fish3:Boid = new Boid();
-      addChild(fish3);
-      units[2] = fish3;
+      for (var i:int = 0; i < fleetSize; i++) {
+        var fish:Boid = new Boid(i*3, 10);
+        addChild(fish);
+        units[i] = fish;
+      }
     }
 
-    public static function onEnterFrame(evt:Event):void {
-      for each (var value:Boid in units) {
-        value.updateBoid(Main.mousePos);
+    public function onEnterFrame(evt:Event):void {
+      for each (var unit:Boid in units) {
+        unit.updateBoid(Main.mousePos, units);
       }
     }
   }

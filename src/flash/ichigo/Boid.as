@@ -20,7 +20,8 @@
     private var momentumWeight:Number = 3.0;
     private var swirlyWeight:Number = 0.0;
 
-    private var random:Point = new Point(Math.random() - 0.5, Math.random() - 0.5);
+    private var random:Point =
+        new Point(Math.random() - 0.5, Math.random() - 0.5);
     //randomJitter controls the granularity of randomness
     //0.0: straight arrow
     //0.5: slightly drunk
@@ -28,7 +29,8 @@
     private var randomJitter:Number = 0.5;
 
     //swirlyRadius controls the size of swirly circle and direction of rotation
-    private var swirlyRadius:Number = (Math.round(Math.random()) * 2 - 1) * 0.3 * Math.random();
+    private var swirlyRadius:Number =
+        (Math.round(Math.random()) * 2 - 1) * 0.3 * Math.random();
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
@@ -48,13 +50,15 @@
       Log.out("initialization complete");
     }
 
-    private function calcAlignment(attractor:Point, flock:Array, position:Point):Point {
+    private function calcAlignment
+        (attractor:Point, flock:Array, position:Point):Point {
       var temp:Point = attractor.subtract(position);
       temp.normalize(1);
       return temp;
     }
 
-    private function calcSeparation(attractor:Point, flock:Array, position:Point):Point {
+    private function calcSeparation
+        (attractor:Point, flock:Array, position:Point):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
           if (Point.distance(neighbor.position, position) < personalSpace) {
@@ -67,7 +71,8 @@
       return temp;
     }
 
-    private function calcCohesion(attractor:Point, flock:Array, position:Point):Point {
+    private function calcCohesion
+        (attractor:Point, flock:Array, position:Point):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
         temp.offset(neighbor.position.x, neighbor.position.y);
@@ -78,7 +83,8 @@
       return temp;
     }
 
-    private function calcAvoidance(attractor:Point, flock:Array, position:Point):Point {
+    private function calcAvoidance
+        (attractor:Point, flock:Array, position:Point):Point {
       var obstacle:Point = nearestObstacle(position)
       if (Point.distance(obstacle, position) < personalSpace) {
         var temp:Point = position.subtract(obstacle);
@@ -88,17 +94,20 @@
       else return new Point(0, 0);
     }
 
-    private function calcRandom(attractor:Point, flock:Array, position:Point):Point {
+    private function calcRandom
+        (attractor:Point, flock:Array, position:Point):Point {
       random.offset(2*randomJitter*(Math.random()-0.5), 2*randomJitter*(Math.random()-0.5));
       random.normalize(1);
       return random;
     }
 
-    private function calcMomentum(attractor:Point, flock:Array, position:Point):Point {
+    private function calcMomentum
+        (attractor:Point, flock:Array, position:Point):Point {
       return velocity;
     }
 
-    private function calcSwirly(attractor:Point, flock:Array, position:Point):Point {
+    private function calcSwirly
+        (attractor:Point, flock:Array, position:Point):Point {
       swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
       var temp:Point = Point.polar(1, swirlyTheta);
       return temp;
@@ -121,7 +130,8 @@
         var result:Point = behavior.func(attractor, flock, position);
         if (result.length > 0) {
           totalWeight += behavior.weight;
-          influence.offset(result.x * behavior.weight, result.y * behavior.weight);
+          influence.offset(result.x * behavior.weight,
+              result.y * behavior.weight);
         }
       }
 

@@ -1,9 +1,7 @@
 #!/bin/bash
 
 DEBUG="-debug=true"
+VERSION="-target-player=10.0.0"
+OUT="-o=web/latest.swf"
 
-mxmlc $DEBUG -compiler.source-path=flash flash/ichigo/Main.as && \
-mv flash/ichigo/Main.swf web/latest.swf
-
-
-
+mxmlc $DEBUG $VERSION $OUT -compiler.source-path=flash flash/ichigo/Main.as

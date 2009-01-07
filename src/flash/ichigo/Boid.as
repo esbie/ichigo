@@ -12,26 +12,29 @@
      * percent that each steering behavior affects the velocity
      * for posterity's sake, these should add to 1.00
      */
-    private var seperationWeight:Number = 1.10;
     private var alignmentWeight:Number = 1.0;
-    private var cohesionWeight:Number = -0.10;
-    private var avoidanceWeight:Number = 1.0;
+    private var seperationWeight:Number = 1.1;
+    private var cohesionWeight:Number = 0.0;
+    private var avoidanceWeight:Number = 3.0;
+    private var randomWeight:Number = 0.0;
+    private var momentumWeight:Number = 3.0;
+    private var swirlyWeight:Number = 0.0;
 
-    private var momentum:Number = 0.85;
+    private var random:Point = new Point(Math.random() - 0.5, Math.random() - 0.5);
+    //randomJitter controls the granularity of randomness
+    //0.0: straight arrow
+    //0.5: slightly drunk
+    //1.0: caffiene high
+    private var randomJitter:Number = 0.5;
+
+    //swirlyRadius controls the size of swirly circle and direction of rotation
+    private var swirlyRadius:Number = (Math.round(Math.random()) * 2 - 1) * 0.3 * Math.random();
+    private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
     private var speed:Number = 2;
     private var personalSpace:Number = 7;
-    public var position:Point = new Point(0, 0);
-
-    /*
-     * the four steering behaviors of Boids
-     * TODO: avoidance not yet implemented--need obstacles
-     */
-    private var separation:Point = new Point(0, 0);
-    private var alignment:Point = new Point(0, 0);
-    private var cohesion:Point = new Point(0, 0);
-    private var avoidance:Point = new Point(0, 0);
+    private var position:Point = new Point(0, 0);
 
     public function Boid(x:Number, y:Number) {
       Log.out("initializing Boid!");
@@ -41,6 +44,7 @@
       this.x = x;
       this.y = y;
       position = new Point(x, y);
+      random.normalize(1);
       Log.out("initialization complete");
     }
 
@@ -74,40 +78,70 @@
       return temp;
     }
 
-    public function updateBoid(attractor:Point):void {
+    private function calcAvoidance(attractor:Point, flock:Array, position:Point):Point {
+      var obstacle:Point = nearestObstacle(position)
+      if (Point.distance(obstacle, position) < personalSpace) {
+        var temp:Point = position.subtract(obstacle);
+        temp.normalize(1);
+        return temp;
+      }
+      else return new Point(0, 0);
+    }
+
+    private function calcRandom(attractor:Point, flock:Array, position:Point):Point {
+      random.offset(2*randomJitter*(Math.random()-0.5), 2*randomJitter*(Math.random()-0.5));
+      random.normalize(1);
+      return random;
+    }
+
+    private function calcMomentum(attractor:Point, flock:Array, position:Point):Point {
+      return velocity;
+    }
+
+    private function calcSwirly(attractor:Point, flock:Array, position:Point):Point {
+      swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
+      var temp:Point = Point.polar(1, swirlyTheta);
+      return temp;
+    }
+
+    public function updateBoid(attractor:Point, flock:Array):void {
       var behaviors:Array = [ { func: calcAlignment, weight: alignmentWeight },
           { func: calcSeparation, weight: seperationWeight },
-          { func: calcCohesion, weight: cohesionWeight } ];
+          { func: calcCohesion, weight: cohesionWeight },
+          { func: calcAvoidance, weight: avoidanceWeight },
+          { func: calcRandom, weight: randomWeight },
+          { func: calcMomentum, weight: momentumWeight },
+          { func: calcSwirly, weight: swirlyWeight } ];
 
       var totalWeight:Number = 0.0;
+      var influence:Point = new Point(0, 0);
 
       //calculate the influence of each behavior
       for each(var behavior:Object in behaviors) {
-        behavior.result = behavior.func(attractor, Flock.units, position);
-        if (behavior.result.length > 0) {
+        var result:Point = behavior.func(attractor, flock, position);
+        if (result.length > 0) {
           totalWeight += behavior.weight;
+          influence.offset(result.x * behavior.weight, result.y * behavior.weight);
         }
       }
 
-      //calculate a normalizer in case some behaviors are not in effect
-      //watch our for divide by zero!
-      var normalizer:Number = (totalWeight==0)? 1 : 1 / totalWeight;
-      var attraction:Point = new Point(0, 0);
-
-      //add together weighted behaviors
-      for each(behavior in behaviors) {
-        attraction.x += behavior.result.x * behavior.weight * normalizer;
-        attraction.y += behavior.result.y * behavior.weight * normalizer;
-      }
-
-      //add behaviors to the Boid's velocity
-      velocity.x = velocity.x * momentum + attraction.x * (1 - momentum);
-      velocity.y = velocity.y * momentum + attraction.y * (1 - momentum);
+      var normalizer:Number = (totalWeight)? 1 / totalWeight : 1;
+      influence.normalize(influence.length * normalizer);
+      velocity = influence;
 
       //update position based on velocity
       position.offset(velocity.x * speed, velocity.y * speed);
       x = position.x
       y = position.y;
+    }
+
+    //dummy function used by calcAvoidance
+    //TODO: implement nearestObstacle
+    private function nearestObstacle(position:Point):Point {
+      if (Math.min(position.x, position.y) == position.x) {
+        return new Point(0,position.y);
+      }
+      else return new Point(position.x, 0);
     }
   }
 }

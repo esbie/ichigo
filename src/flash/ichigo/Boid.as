@@ -1,27 +1,21 @@
-﻿package ichigo {
-  import flash.display.MovieClip;
-  import flash.events.Event;
+package ichigo {
   import flash.geom.Point;
 
-  import ichigo.Flock;
-  import ichigo.Main;
   import ichigo.utils.Log;
 
-  public class Boid extends MovieClip {
+  public class Boid extends Point {
     /*
-     * percent that each steering behavior affects the velocity
-     * for posterity's sake, these should add to 1.00
+     * These values will scale their respective vector calculations.
      */
-    private var alignmentWeight:Number = 1.0;
-    private var seperationWeight:Number = 1.1;
-    private var cohesionWeight:Number = 0.0;
-    private var avoidanceWeight:Number = 3.0;
-    private var randomWeight:Number = 0.0;
-    private var momentumWeight:Number = 3.0;
-    private var swirlyWeight:Number = 0.0;
+    private var alignmentScale:Number = 1.0;
+    private var seperationScale:Number = 1.5;
+    private var cohesionScale:Number = 0.0;
+    private var avoidanceScale:Number = 4.0;
+    private var randomScale:Number = 0.0;
+    private var momentumScale:Number = 3.1;
+    private var swirlyScale:Number = 0.0;
 
-    private var random:Point =
-        new Point(Math.random() - 0.5, Math.random() - 0.5);
+    private var random:Point = new Point(0, 0);
     //randomJitter controls the granularity of randomness
     //0.0: straight arrow
     //0.5: slightly drunk
@@ -29,129 +23,139 @@
     private var randomJitter:Number = 0.5;
 
     //swirlyRadius controls the size of swirly circle and direction of rotation
-    private var swirlyRadius:Number =
-        (Math.round(Math.random()) * 2 - 1) * 0.3 * Math.random();
+    //in the range of (-.3, .3).
+    private var swirlyRadius:Number = Math.random()*.6 - .3;
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
     private var speed:Number = 2;
-    private var personalSpace:Number = 7;
-    private var position:Point = new Point(0, 0);
+    private var personalSpace:Number = 10;
 
     public function Boid(x:Number, y:Number) {
-      Log.out("initializing Boid!");
-      graphics.beginFill(0x11);
-      graphics.drawCircle(0, 0, 3);
-      graphics.endFill();
       this.x = x;
       this.y = y;
-      position = new Point(x, y);
-      random.normalize(1);
-      Log.out("initialization complete");
     }
 
-    private function calcAlignment
-        (attractor:Point, flock:Array, position:Point):Point {
+    private function calcAlignment(attractor:Point,
+                                   flock:Vector.<Boid>,
+                                   position:Point,
+                                   weight:Number):Point {
       var temp:Point = attractor.subtract(position);
-      temp.normalize(1);
+      temp.normalize(weight);
       return temp;
     }
 
-    private function calcSeparation
-        (attractor:Point, flock:Array, position:Point):Point {
+    private function calcSeparation(attractor:Point,
+                                    flock:Vector.<Boid>,
+                                    position:Point,
+                                    weight:Number):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
-          if (Point.distance(neighbor.position, position) < personalSpace) {
-            var difference:Point = neighbor.position.subtract(position);
+          if (Point.distance(neighbor, position) < personalSpace) {
+            var difference:Point = neighbor.subtract(position);
             difference.normalize(1 / difference.length);
             temp.offset(difference.x, difference.y);
           }
       }
-      temp.normalize(-1);
+      // Negative weights have a repulsive/separating affect.
+      temp.normalize(-weight);
       return temp;
     }
 
-    private function calcCohesion
-        (attractor:Point, flock:Array, position:Point):Point {
+    private function calcCohesion(attractor:Point,
+                                  flock:Vector.<Boid>,
+                                  position:Point,
+                                  weight:Number):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
-        temp.offset(neighbor.position.x, neighbor.position.y);
+        temp.offset(neighbor.x, neighbor.y);
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
-      temp.normalize(1);
+      temp.normalize(weight);
       return temp;
     }
 
-    private function calcAvoidance
-        (attractor:Point, flock:Array, position:Point):Point {
+    private function calcAvoidance(attractor:Point,
+                                   flock:Vector.<Boid>,
+                                   position:Point,
+                                   weight:Number):Point {
       var obstacle:Point = nearestObstacle(position)
       if (Point.distance(obstacle, position) < personalSpace) {
-        var temp:Point = position.subtract(obstacle);
-        temp.normalize(1);
+        var temp:Point = subtract(obstacle);
+        temp.normalize(weight);
         return temp;
       }
       else return new Point(0, 0);
     }
 
-    private function calcRandom
-        (attractor:Point, flock:Array, position:Point):Point {
-      random.offset(2*randomJitter*(Math.random()-0.5), 2*randomJitter*(Math.random()-0.5));
-      random.normalize(1);
+    private function calcRandom(attractor:Point,
+                                flock:Vector.<Boid>,
+                                position:Point,
+                                weight:Number):Point {
+      random.offset(2*randomJitter*(Math.random()-0.5),
+                    2*randomJitter*(Math.random()-0.5));
+      random.normalize(weight);
       return random;
     }
 
-    private function calcMomentum
-        (attractor:Point, flock:Array, position:Point):Point {
-      return velocity;
-    }
-
-    private function calcSwirly
-        (attractor:Point, flock:Array, position:Point):Point {
-      swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
-      var temp:Point = Point.polar(1, swirlyTheta);
+    private function calcMomentum(attractor:Point,
+                                  flock:Vector.<Boid>,
+                                  position:Point,
+                                  weight:Number):Point {
+      var temp:Point = velocity.clone();
+      temp.normalize(weight);
       return temp;
     }
 
-    public function updateBoid(attractor:Point, flock:Array):void {
-      var behaviors:Array = [ { func: calcAlignment, weight: alignmentWeight },
-          { func: calcSeparation, weight: seperationWeight },
-          { func: calcCohesion, weight: cohesionWeight },
-          { func: calcAvoidance, weight: avoidanceWeight },
-          { func: calcRandom, weight: randomWeight },
-          { func: calcMomentum, weight: momentumWeight },
-          { func: calcSwirly, weight: swirlyWeight } ];
+    private function calcSwirly(attractor:Point,
+                                flock:Vector.<Boid>,
+                                position:Point,
+                                weight:Number):Point {
+      swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
+      var temp:Point = Point.polar(1, swirlyTheta);
+      temp.normalize(weight);
+      return temp;
+    }
 
-      var totalWeight:Number = 0.0;
+    public function updateBoid(attractor:Point, flock:Vector.<Boid>):void {
+      var behaviors:Array = [
+          { func: calcAlignment, weight: alignmentScale },
+          { func: calcSeparation, weight: seperationScale },
+          { func: calcCohesion, weight: cohesionScale },
+          { func: calcAvoidance, weight: avoidanceScale },
+          { func: calcRandom, weight: randomScale },
+          { func: calcMomentum, weight: momentumScale },
+          { func: calcSwirly, weight: swirlyScale }
+        ];
+
+      var totalWeight:Number = 0;
       var influence:Point = new Point(0, 0);
 
       //calculate the influence of each behavior
       for each(var behavior:Object in behaviors) {
-        var result:Point = behavior.func(attractor, flock, position);
-        if (result.length > 0) {
+        var result:Point = behavior.func(attractor,
+                                         flock,
+                                         this,
+                                         behavior.weight);
+        if (result.length && behavior.weight) {
           totalWeight += behavior.weight;
-          influence.offset(result.x * behavior.weight,
-              result.y * behavior.weight);
+          influence.offset(result.x, result.y);
         }
       }
 
-      var normalizer:Number = (totalWeight)? 1 / totalWeight : 1;
-      influence.normalize(influence.length * normalizer);
+      influence.normalize(influence.length / totalWeight);
       velocity = influence;
 
       //update position based on velocity
-      position.offset(velocity.x * speed, velocity.y * speed);
-      x = position.x
-      y = position.y;
+      offset(velocity.x * speed, velocity.y * speed);
     }
 
     //dummy function used by calcAvoidance
     //TODO: implement nearestObstacle
     private function nearestObstacle(position:Point):Point {
-      if (Math.min(position.x, position.y) == position.x) {
-        return new Point(0,position.y);
-      }
-      else return new Point(position.x, 0);
+      return new Point(Math.round(position.x / 30) * 30,
+                       Math.round(position.y / 30) * 30);
     }
   }
 }

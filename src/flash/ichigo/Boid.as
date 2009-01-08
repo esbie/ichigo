@@ -6,12 +6,17 @@ package ichigo {
   public class Boid extends Point {
     /*
      * These values will scale their respective vector calculations.
+     * Most often, the vector calculations will either return a vector with 0 or
+     * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
+    // Negative scale have a repulsive/separating affect.
     private var seperationScale:Number = 1.5;
     private var cohesionScale:Number = 0.0;
     private var avoidanceScale:Number = 4.0;
     private var randomScale:Number = 0.0;
+    // Momentum uses velocity directly which can have length [0, 1].
+    // This value will scale the length
     private var momentumScale:Number = 3.1;
     private var swirlyScale:Number = 0.0;
 
@@ -38,17 +43,14 @@ package ichigo {
 
     private function calcAlignment(attractor:Point,
                                    flock:Vector.<Boid>,
-                                   position:Point,
-                                   weight:Number):Point {
+                                   position:Point):Point {
       var temp:Point = attractor.subtract(position);
-      temp.normalize(weight);
       return temp;
     }
 
     private function calcSeparation(attractor:Point,
                                     flock:Vector.<Boid>,
-                                    position:Point,
-                                    weight:Number):Point {
+                                    position:Point):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
           if (Point.distance(neighbor, position) < personalSpace) {
@@ -57,94 +59,89 @@ package ichigo {
             temp.offset(difference.x, difference.y);
           }
       }
-      // Negative weights have a repulsive/separating affect.
-      temp.normalize(-weight);
-      return temp;
+      return temp.length? temp : null;
     }
 
     private function calcCohesion(attractor:Point,
                                   flock:Vector.<Boid>,
-                                  position:Point,
-                                  weight:Number):Point {
+                                  position:Point):Point {
+      if (!flock.length) {
+        return null;
+      }
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
         temp.offset(neighbor.x, neighbor.y);
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
-      temp.normalize(weight);
       return temp;
     }
 
     private function calcAvoidance(attractor:Point,
                                    flock:Vector.<Boid>,
-                                   position:Point,
-                                   weight:Number):Point {
+                                   position:Point):Point {
       var obstacle:Point = nearestObstacle(position)
       if (Point.distance(obstacle, position) < personalSpace) {
         var temp:Point = subtract(obstacle);
-        temp.normalize(weight);
         return temp;
       }
-      else return new Point(0, 0);
+      else return null;
     }
 
     private function calcRandom(attractor:Point,
                                 flock:Vector.<Boid>,
-                                position:Point,
-                                weight:Number):Point {
+                                position:Point):Point {
       random.offset(2*randomJitter*(Math.random()-0.5),
                     2*randomJitter*(Math.random()-0.5));
-      random.normalize(weight);
       return random;
     }
 
     private function calcMomentum(attractor:Point,
                                   flock:Vector.<Boid>,
-                                  position:Point,
-                                  weight:Number):Point {
-      var temp:Point = velocity.clone();
-      temp.normalize(weight);
-      return temp;
+                                  position:Point):Point {
+      return velocity;
     }
 
     private function calcSwirly(attractor:Point,
                                 flock:Vector.<Boid>,
-                                position:Point,
-                                weight:Number):Point {
+                                position:Point):Point {
       swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
       var temp:Point = Point.polar(1, swirlyTheta);
-      temp.normalize(weight);
       return temp;
     }
 
     public function updateBoid(attractor:Point, flock:Vector.<Boid>):void {
       var behaviors:Array = [
-          { func: calcAlignment, weight: alignmentScale },
-          { func: calcSeparation, weight: seperationScale },
-          { func: calcCohesion, weight: cohesionScale },
-          { func: calcAvoidance, weight: avoidanceScale },
-          { func: calcRandom, weight: randomScale },
-          { func: calcMomentum, weight: momentumScale },
-          { func: calcSwirly, weight: swirlyScale }
+          { func: calcAlignment, scale: alignmentScale },
+          { func: calcSeparation, scale: seperationScale },
+          { func: calcCohesion, scale: cohesionScale },
+          { func: calcAvoidance, scale: avoidanceScale },
+          { func: calcRandom, scale: randomScale },
+          { func: calcMomentum, scale: momentumScale * velocity.length },
+          { func: calcSwirly, scale: swirlyScale }
         ];
 
-      var totalWeight:Number = 0;
+      // Each behavior is scaled individually. scaleSum allows the final result
+      // to receive a weighted average.
+      // eg: scale 4, value 10 & scale 1, value 5 -> value 9
+      var scaleSum:Number = 0;
       var influence:Point = new Point(0, 0);
 
       //calculate the influence of each behavior
       for each(var behavior:Object in behaviors) {
-        var result:Point = behavior.func(attractor,
-                                         flock,
-                                         this,
-                                         behavior.weight);
-        if (result.length && behavior.weight) {
-          totalWeight += behavior.weight;
+        if (!behavior.scale) {
+          continue;
+        }
+        var result:Point = behavior.func(attractor, flock, this);
+        if (result !== null) {
+          scaleSum += behavior.scale;
+          result.normalize(behavior.scale);
           influence.offset(result.x, result.y);
         }
       }
 
-      influence.normalize(influence.length / totalWeight);
+      // Perform a weighted average: totalValue / totalScale
+      influence.normalize(influence.length / scaleSum);
       velocity = influence;
 
       //update position based on velocity

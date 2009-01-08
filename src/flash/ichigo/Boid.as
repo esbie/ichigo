@@ -6,17 +6,16 @@ package ichigo {
   public class Boid extends Point {
     /*
      * These values will scale their respective vector calculations.
-     * Most often, the vector calculations will either return a vector with 0 or
+     * Most often, the result of the vector calculation will normalize to 0 or
      * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
-    // Negative scale have a repulsive/separating affect.
     private var seperationScale:Number = 1.5;
     private var cohesionScale:Number = 0.0;
     private var avoidanceScale:Number = 4.0;
     private var randomScale:Number = 0.0;
     // Momentum uses velocity directly which can have length [0, 1].
-    // This value will scale the length
+    // This value will scale that length
     private var momentumScale:Number = 3.1;
     private var swirlyScale:Number = 0.0;
 
@@ -56,7 +55,7 @@ package ichigo {
           if (Point.distance(neighbor, position) < personalSpace) {
             var difference:Point = neighbor.subtract(position);
             difference.normalize(1 / difference.length);
-            temp.offset(difference.x, difference.y);
+            temp.offset(-difference.x, -difference.y);
           }
       }
       return temp.length? temp : null;

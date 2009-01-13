@@ -10,7 +10,7 @@ package ichigo {
   [SWF(width=100, height=100, backgroundColor=0x0B025B, frameRate=40)]
   public class Main extends MovieClip {
     public static var mousePos:Point = new Point(0, 0);
-    public static var Flocks:Vector.<Flock> = new Vector.<Flock>();
+    public static var flocks:Vector.<Flock> = new Vector.<Flock>();
 
     public function Main () {
       stage.align     = StageAlign.TOP_LEFT;
@@ -31,7 +31,7 @@ package ichigo {
       var aSchool:Flock = new Flock(3, new Point(300, 100), new Point(30, 30));
       addChild(aSchool);
 
-      Flocks.push(school, theirSchool, aSchool);
+      flocks.push(school, theirSchool, aSchool);
 
       buttonMode = true;
       useHandCursor = true;
@@ -41,14 +41,14 @@ package ichigo {
     }
 
     public function update():void {
-      for (var i:int = 0; i < Flocks.length; i++ ) {
-        Flocks[i].updateFlock();
-        // assumes (for the moment) that Flocks[0] is the only flock
+      for (var i:int = 0; i < flocks.length; i++ ) {
+        flocks[i].updateFlock();
+        // assumes (for the moment) that flocks[0] is the only flock
         // we want to test for collisions
         if (i != 0) {
-          if (Flocks[0].hitTestObject(Flocks[i])) {
-            Flocks[0].merge(Flocks[i]);
-            Flocks.splice(i, 1);
+          if (flocks[0].hitTestObject(flocks[i])) {
+            flocks[0].add(flocks[i]);
+            flocks.splice(i, 1);
           }
         }
       }

@@ -2,7 +2,6 @@ package ichigo {
   import flash.display.MovieClip;
   import flash.events.Event;
   import flash.geom.Point;
-  import flash.utils.setInterval;
 
   import ichigo.utils.Log;
 
@@ -35,12 +34,11 @@ package ichigo {
       }
     }
 
-    public function merge(acquired:Flock):void {
+    public function add(acquired:Flock):void {
       var origSize:int = units.length;
       for (var i:int = 0; i < acquired.units.length; i++) {
-        units[origSize + i] = acquired.units[i];
-        icons[origSize + i] = acquired.icons[i];
-        addChild(icons[origSize + i]);
+        units.push(acquired.units[i]);
+        icons.push(acquired.icons[i]);
       }
     }
   }

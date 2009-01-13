@@ -35,8 +35,8 @@ package ichigo {
     }
 
     public function add(acquired:Flock):void {
-      var origSize:int = units.length;
-      for (var i:int = 0; i < acquired.units.length; i++) {
+      var length:int = acquired.units.length;
+      for (var i:int = 0; i < length; i++) {
         units.push(acquired.units[i]);
         icons.push(acquired.icons[i]);
       }

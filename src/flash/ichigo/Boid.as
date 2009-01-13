@@ -12,7 +12,7 @@ package ichigo {
     private var alignmentScale:Number = 1.0;
     private var seperationScale:Number = 1.5;
     private var cohesionScale:Number = 0.0;
-    private var avoidanceScale:Number = 4.0;
+    private var avoidanceScale:Number = 0.0;
     private var randomScale:Number = 0.0;
     // Momentum uses velocity directly which can have length [0, 1].
     // This value will scale that length

@@ -3,11 +3,15 @@ package ichigo {
   import flash.display.*;
   import flash.events.*;
   import flash.geom.Point;
+  import flash.utils.setInterval;
 
   import ichigo.utils.Log;
 
   [SWF(width=100, height=100, backgroundColor=0x0B025B, frameRate=40)]
   public class Main extends MovieClip {
+    public static var mousePos:Point = new Point(0, 0);
+    public static var Flocks:Vector.<Flock> = new Vector.<Flock>();
+
     public function Main () {
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -19,19 +23,40 @@ package ichigo {
       child.graphics.endFill();
       addChild(child);
 
-      var school:Flock = new Flock(12);
+      var school:Flock = new Flock(12, mousePos, new Point(500,500));
       addChild(school);
+      var theirSchool:Flock = new Flock(3, new Point(100, 100),
+                                        new Point(30, 30));
+      addChild(theirSchool);
+      var aSchool:Flock = new Flock(3, new Point(300, 100), new Point(30, 30));
+      addChild(aSchool);
+
+      Flocks.push(school, theirSchool, aSchool);
 
       buttonMode = true;
       useHandCursor = true;
       addEventListener(MouseEvent.CLICK, onRelease);
+
+      setInterval(update, 20);
+    }
+
+    public function update():void {
+      for (var i:int = 0; i < Flocks.length; i++ ) {
+        Flocks[i].updateFlock();
+        // assumes (for the moment) that Flocks[0] is the only flock
+        // we want to test for collisions
+        if (i != 0) {
+          if (Flocks[0].hitTestObject(Flocks[i])) {
+            Flocks[0].merge(Flocks[i]);
+            Flocks.splice(i, 1);
+          }
+        }
+      }
     }
 
     public function onRelease (evt:MouseEvent):void {
       Log.out("Clicked!");
     }
-
-    public static var mousePos:Point = new Point(0,0);
 
     public function onMouseMove(evt:MouseEvent):void {
       mousePos.x = evt.stageX;

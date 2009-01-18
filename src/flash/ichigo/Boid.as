@@ -10,8 +10,8 @@ package ichigo {
      * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
-    private var seperationScale:Number = 1.5;
-    private var cohesionScale:Number = 0.0;
+    private var seperationScale:Number = 2.5;
+    private var cohesionScale:Number = 0.5;
     private var avoidanceScale:Number = 0.0;
     private var randomScale:Number = 0.0;
     // Momentum uses velocity directly which can have length [0, 1].
@@ -32,24 +32,25 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var speed:Number = 2;
+    private var maxSpeed:Number = 2;
     private var personalSpace:Number = 10;
 
     public function Boid(x:Number, y:Number) {
-      this.x = x;
-      this.y = y;
+      super(x, y);
     }
 
     private function calcAlignment(attractor:Point,
                                    flock:Vector.<Boid>,
-                                   position:Point):Point {
+                                   position:Point,
+                                   influence:Point):Point {
       var temp:Point = attractor.subtract(position);
       return temp;
     }
 
     private function calcSeparation(attractor:Point,
                                     flock:Vector.<Boid>,
-                                    position:Point):Point {
+                                    position:Point,
+                                    influence:Point):Point {
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
           if (Point.distance(neighbor, position) < personalSpace) {
@@ -63,7 +64,8 @@ package ichigo {
 
     private function calcCohesion(attractor:Point,
                                   flock:Vector.<Boid>,
-                                  position:Point):Point {
+                                  position:Point,
+                                  influence:Point):Point {
       if (!flock.length) {
         return null;
       }
@@ -78,7 +80,8 @@ package ichigo {
 
     private function calcAvoidance(attractor:Point,
                                    flock:Vector.<Boid>,
-                                   position:Point):Point {
+                                   position:Point,
+                                  influence:Point):Point {
       var obstacle:Point = nearestObstacle(position)
       if (Point.distance(obstacle, position) < personalSpace) {
         var temp:Point = subtract(obstacle);
@@ -89,7 +92,8 @@ package ichigo {
 
     private function calcRandom(attractor:Point,
                                 flock:Vector.<Boid>,
-                                position:Point):Point {
+                                position:Point,
+                                influence:Point):Point {
       random.offset(2*randomJitter*(Math.random()-0.5),
                     2*randomJitter*(Math.random()-0.5));
       return random;
@@ -97,16 +101,37 @@ package ichigo {
 
     private function calcMomentum(attractor:Point,
                                   flock:Vector.<Boid>,
-                                  position:Point):Point {
+                                  position:Point,
+                                  influence:Point):Point {
       return velocity;
     }
 
     private function calcSwirly(attractor:Point,
                                 flock:Vector.<Boid>,
-                                position:Point):Point {
+                                position:Point,
+                                influence:Point):Point {
       swirlyTheta = (swirlyTheta + swirlyRadius) % (2 * Math.PI);
       var temp:Point = Point.polar(1, swirlyTheta);
       return temp;
+    }
+
+    public function reset(a:*, b:*, c:*, d:*):Point {
+      return new Point(0, 0);
+    }
+
+    /**
+     * TODO: It will probably look more realistic if there is also a minimum
+     * distance a fish must travel before it can turn again. This function could
+     * save the direction each time it picks "influence" over velocity and
+     * return ignore "influence" until the boid has moved away.
+     */
+    public function lockDirection(attractor:Point,
+                                  flock:Vector.<Boid>,
+                                  position:Point,
+                                  influence:Point):Point {
+      var radianDelta:Number = Math.abs(Math.atan2(velocity.y, velocity.x) -
+                                        Math.atan2(influence.y, influence.x));
+      return radianDelta < (Math.PI / 6) ? velocity.clone() : influence;
     }
 
     public function updateBoid(attractor:Point, flock:Vector.<Boid>):void {
@@ -116,8 +141,9 @@ package ichigo {
           { func: calcCohesion, scale: cohesionScale },
           { func: calcAvoidance, scale: avoidanceScale },
           { func: calcRandom, scale: randomScale },
-          { func: calcMomentum, scale: momentumScale * velocity.length },
-          { func: calcSwirly, scale: swirlyScale }
+          { func: calcSwirly, scale: swirlyScale },
+          { func: lockDirection },
+          { func: calcMomentum, scale: momentumScale * velocity.length }
         ];
 
       // Each behavior is scaled individually. scaleSum allows the final result
@@ -128,22 +154,27 @@ package ichigo {
 
       //calculate the influence of each behavior
       for each(var behavior:Object in behaviors) {
-        if (!behavior.scale) {
-          continue;
-        }
-        var result:Point = behavior.func(attractor, flock, this);
-        if (result !== null) {
-          scaleSum += behavior.scale;
-          result.normalize(behavior.scale);
-          influence.offset(result.x, result.y);
+        if (behavior.scale == undefined) {
+          // Scale and save whatever has been summed so far (weighted average)
+          influence = scale(influence, scaleSum);
+          // Then reset sum
+          scaleSum = 0;
+          // And call non-scaling behavior function
+          influence = behavior.func(attractor, flock, this, influence);
+        } else if (behavior.scale != 0) {
+          var result:Point = behavior.func(attractor, flock, this, influence);
+          if (result !== null) {
+            scaleSum += behavior.scale;
+            result.normalize(behavior.scale);
+            influence.offset(result.x, result.y);
+          }
         }
       }
 
-      // Perform a weighted average: totalValue / totalScale
-      influence.normalize(influence.length / scaleSum);
-      velocity = influence;
-
-      //update position based on velocity
+      // Save new velocity using weighted average of influence and scale.
+      //Log.out("Next step: ", velocity, scaleSum, this);
+      velocity = scale(influence, scaleSum);
+      var speed:Number = getSpeed(attractor, maxSpeed);
       offset(velocity.x * speed, velocity.y * speed);
     }
 
@@ -152,6 +183,27 @@ package ichigo {
     private function nearestObstacle(position:Point):Point {
       return new Point(Math.round(position.x / 30) * 30,
                        Math.round(position.y / 30) * 30);
+    }
+
+    /**
+     * TODO: If we used new Boid() instead of new Point() we could call this
+     * function as myBoid.scale(scale). We'd also want to move the behavior
+     * functions out of this class.
+     */
+    private function scale(pt:Point, scale:Number):Point {
+      if (scale != 0) {
+        pt.normalize(pt.length / scale);
+      }
+      return pt;
+    }
+
+    /**
+     * TODO: Redesign how "speed" is determined. Velocity and maxSpeed should
+     * be enough.
+     */
+    private function getSpeed(attractor:Point, maxSpeed:Number):Number {
+      var distance:Number = Point.distance(this, attractor);
+      return Math.min(maxSpeed, distance / (maxSpeed * maxSpeed));
     }
   }
 }

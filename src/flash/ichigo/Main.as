@@ -23,7 +23,7 @@ package ichigo {
       child.graphics.endFill();
       addChild(child);
 
-      var school:Flock = new Flock(12, mousePos, new Point(500,500));
+      var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
       var theirSchool:Flock = new Flock(3, new Point(100, 100),
                                         new Point(30, 30));

@@ -1,11 +1,15 @@
 package ichigo {
   import flash.display.MovieClip;
   import flash.events.Event;
+  import flash.filters.DropShadowFilter;
   import flash.geom.Point;
 
   import ichigo.utils.Log;
 
   public class Flock extends MovieClip {
+    private static var DROPSHADOW:Array =
+        [new DropShadowFilter(3, 45, 0x000011, .75)];
+
     public var units:Vector.<Boid> = new Vector.<Boid>();
     public var icons:Vector.<MovieClip> = new Vector.<MovieClip>();
     public var attractor:Point = new Point();
@@ -15,9 +19,16 @@ package ichigo {
         var fish:Boid = new Boid(i*3 + spawnPoint.x, spawnPoint.y);
         units[i] = fish;
         var icon:MovieClip = new MovieClip();
+        icon.graphics.beginFill(0x669999);
+        icon.graphics.drawCircle(0, 0, 8);
         icon.graphics.beginFill(0xFFFFFF);
-        icon.graphics.drawCircle(0, 0, 3);
+        icon.graphics.drawCircle(6, -3, 2.5);
+        icon.graphics.drawCircle(6, 3, 2.5);
+        icon.graphics.beginFill(0x000000);
+        icon.graphics.drawCircle(7, -3, 1.5);
+        icon.graphics.drawCircle(7, 3, 1.5);
         icon.graphics.endFill();
+        icon.filters = DROPSHADOW;
         icons[i] = icon;
         addChild(icon);
       }
@@ -31,6 +42,8 @@ package ichigo {
         units[i].updateBoid(attractor, units);
         icons[i].x = units[i].x;
         icons[i].y = units[i].y;
+        var direction:Point = units[i].direction;
+        icons[i].rotation = Math.atan2(direction.y, direction.x)/Math.PI * 180;
       }
     }
 

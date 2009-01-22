@@ -14,8 +14,6 @@ package ichigo {
     private var cohesionScale:Number = 0.5;
     private var avoidanceScale:Number = 0.0;
     private var randomScale:Number = 0.0;
-    // Momentum uses velocity directly which can have length [0, 1].
-    // This value will scale that length
     private var momentumScale:Number = 3.1;
     private var swirlyScale:Number = 0.0;
 
@@ -32,8 +30,12 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var maxSpeed:Number = 2;
-    private var personalSpace:Number = 10;
+    private var maxSpeed:Number = 5;
+    private var minSpeed:Number = 1;
+    public var direction:Point = new Point(1, 0);
+    // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
+    private var steerResistance:Number = .75;
+    private var personalSpace:Number = 30;
 
     public function Boid(x:Number, y:Number) {
       super(x, y);
@@ -66,16 +68,13 @@ package ichigo {
                                   flock:Vector.<Boid>,
                                   position:Point,
                                   influence:Point):Point {
-      if (!flock.length) {
-        return null;
-      }
       var temp:Point = new Point(0, 0);
       for each(var neighbor:Boid in flock) {
         temp.offset(neighbor.x, neighbor.y);
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
-      return temp;
+      return temp.length? temp : null;
     }
 
     private function calcAvoidance(attractor:Point,
@@ -119,22 +118,44 @@ package ichigo {
       return new Point(0, 0);
     }
 
+    public function applyInfluence(a:*, b:*, c:*, influence:Point):Point {
+      return influence;
+    }
+
     /**
      * TODO: It will probably look more realistic if there is also a minimum
      * distance a fish must travel before it can turn again. This function could
      * save the direction each time it picks "influence" over velocity and
      * return ignore "influence" until the boid has moved away.
      */
-    public function lockDirection(attractor:Point,
-                                  flock:Vector.<Boid>,
-                                  position:Point,
-                                  influence:Point):Point {
-      var radianDelta:Number = Math.abs(Math.atan2(velocity.y, velocity.x) -
+    public function pickDirection(influence:Point):void {
+      var radianDelta:Number = Math.abs(Math.atan2(direction.y, direction.x) -
                                         Math.atan2(influence.y, influence.x));
-      return radianDelta < (Math.PI / 6) ? velocity.clone() : influence;
+      // If direction sufficiently diverges pick a new velocity
+      if (radianDelta > (Math.PI / 6)) {
+        // Turn half way to the new direction
+        direction = Point.interpolate(direction, influence, steerResistance);
+        // direction should be 0 or 1.
+        direction.normalize(1);
+      }
+    }
+
+    public function calcVelocity(attractor:Point,
+                                 flock:Vector.<Boid>,
+                                 position:Point,
+                                 influence:Point):Point {
+      // Velocity is defined as speed * direction.
+      pickDirection(influence);
+      var velocity:Point = direction.clone();
+      var speed:Number = maxSpeed;
+      speed = Math.min(speed, Point.distance(attractor, this)/(speed*speed));
+      speed = Math.max(speed, minSpeed);
+      velocity = scale(velocity, speed);
+      return velocity;
     }
 
     public function updateBoid(attractor:Point, flock:Vector.<Boid>):void {
+      var start:Point = clone();
       var behaviors:Array = [
           { func: calcAlignment, scale: alignmentScale },
           { func: calcSeparation, scale: seperationScale },
@@ -142,8 +163,9 @@ package ichigo {
           { func: calcAvoidance, scale: avoidanceScale },
           { func: calcRandom, scale: randomScale },
           { func: calcSwirly, scale: swirlyScale },
-          { func: lockDirection },
-          { func: calcMomentum, scale: momentumScale * velocity.length }
+          { func: calcVelocity },
+          { func: calcMomentum, scale: momentumScale },
+          { func: applyInfluence }
         ];
 
       // Each behavior is scaled individually. scaleSum allows the final result
@@ -156,11 +178,14 @@ package ichigo {
       for each(var behavior:Object in behaviors) {
         if (behavior.scale == undefined) {
           // Scale and save whatever has been summed so far (weighted average)
-          influence = scale(influence, scaleSum);
-          // Then reset sum
-          scaleSum = 0;
+          influence = scale(influence, 1/scaleSum);
           // And call non-scaling behavior function
           influence = behavior.func(attractor, flock, this, influence);
+          // Which we apply to ourselves
+          offset(influence.x, influence.y);
+          // Then reset
+          influence = new Point(0, 0);
+          scaleSum = 0;
         } else if (behavior.scale != 0) {
           var result:Point = behavior.func(attractor, flock, this, influence);
           if (result !== null) {
@@ -171,11 +196,8 @@ package ichigo {
         }
       }
 
-      // Save new velocity using weighted average of influence and scale.
-      //Log.out("Next step: ", velocity, scaleSum, this);
-      velocity = scale(influence, scaleSum);
-      var speed:Number = getSpeed(attractor, maxSpeed);
-      offset(velocity.x * speed, velocity.y * speed);
+      // Velocity = how much we have moved in this update.
+      velocity = subtract(start);
     }
 
     //dummy function used by calcAvoidance
@@ -192,18 +214,9 @@ package ichigo {
      */
     private function scale(pt:Point, scale:Number):Point {
       if (scale != 0) {
-        pt.normalize(pt.length / scale);
+        pt.normalize(pt.length * scale);
       }
       return pt;
-    }
-
-    /**
-     * TODO: Redesign how "speed" is determined. Velocity and maxSpeed should
-     * be enough.
-     */
-    private function getSpeed(attractor:Point, maxSpeed:Number):Number {
-      var distance:Number = Point.distance(this, attractor);
-      return Math.min(maxSpeed, distance / (maxSpeed * maxSpeed));
     }
   }
 }

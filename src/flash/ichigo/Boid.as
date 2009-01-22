@@ -133,7 +133,7 @@ package ichigo {
                                         Math.atan2(influence.y, influence.x));
       // If direction sufficiently diverges pick a new velocity
       if (radianDelta > (Math.PI / 6)) {
-        // Turn half way to the new direction
+        // Turn partway towards influence (steerResistance is a % of influence)
         direction = Point.interpolate(direction, influence, steerResistance);
         // direction should be 0 or 1.
         direction.normalize(1);

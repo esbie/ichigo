@@ -135,18 +135,14 @@ package ichigo {
     public function pickDirection(influence:Point):void {
       var radianDelta:Number = Math.abs(Math.atan2(direction.y, direction.x) -
                                         Math.atan2(influence.y, influence.x));
-      var temp:Point = new Point(0, 0);
-      //implementation of "momentum"
-      temp.x = direction.x * steerResistance +
-                influence.x * speed * (1 - steerResistance);
-      temp.y = direction.y * steerResistance +
-                influence.y * speed * (1 - steerResistance);
-      // If direction sufficiently diverges pick a new velocity
+      influence = scale(influence, speed);
+      influence = Point.interpolate(direction, influence, steerResistance);
+      // If direction sufficiently diverges pick the new velocity
       if (radianDelta > (Math.PI / 6)) {
-        direction = temp;
+        direction = influence.clone();
       }
       else {
-        direction.normalize(temp.length);
+        direction.normalize(influence.length);
       }
     }
 

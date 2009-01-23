@@ -10,11 +10,11 @@ package ichigo {
      * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
-    private var seperationScale:Number = 2.5;
-    private var cohesionScale:Number = 0.5;
+    private var seperationScale:Number = 1.5;
+    private var cohesionScale:Number = 0.50;
     private var avoidanceScale:Number = 0.0;
     private var randomScale:Number = 0.0;
-    private var momentumScale:Number = 3.1;
+    private var momentumScale:Number = 0.0
     private var swirlyScale:Number = 0.0;
 
     private var random:Point = new Point(0, 0);
@@ -30,12 +30,11 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var maxSpeed:Number = 5;
-    private var minSpeed:Number = 1;
+    private var speed:Number = 15;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
-    private var steerResistance:Number = .75;
-    private var personalSpace:Number = 30;
+    private var steerResistance:Number = 0.75;
+    private var personalSpace:Number = 15;
 
     public function Boid(x:Number, y:Number) {
       super(x, y);
@@ -46,6 +45,8 @@ package ichigo {
                                    position:Point,
                                    influence:Point):Point {
       var temp:Point = attractor.subtract(position);
+      //TODO: take out magic 20
+      temp.normalize(Math.min(temp.length/20, 1));
       return temp;
     }
 
@@ -61,6 +62,7 @@ package ichigo {
             temp.offset(-difference.x, -difference.y);
           }
       }
+      temp.normalize(0.5);
       return temp.length? temp : null;
     }
 
@@ -74,6 +76,7 @@ package ichigo {
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
+      temp.normalize(Math.min(temp.length / 100, 1));
       return temp.length? temp : null;
     }
 
@@ -128,15 +131,22 @@ package ichigo {
      * save the direction each time it picks "influence" over velocity and
      * return ignore "influence" until the boid has moved away.
      */
+    //TODO: this function no longer picks just direction
     public function pickDirection(influence:Point):void {
       var radianDelta:Number = Math.abs(Math.atan2(direction.y, direction.x) -
                                         Math.atan2(influence.y, influence.x));
+      var temp:Point = new Point(0, 0);
+      //implementation of "momentum"
+      temp.x = direction.x * steerResistance +
+                influence.x * speed * (1 - steerResistance);
+      temp.y = direction.y * steerResistance +
+                influence.y * speed * (1 - steerResistance);
       // If direction sufficiently diverges pick a new velocity
       if (radianDelta > (Math.PI / 6)) {
-        // Turn partway towards influence (steerResistance is a % of influence)
-        direction = Point.interpolate(direction, influence, steerResistance);
-        // direction should be 0 or 1.
-        direction.normalize(1);
+        direction = temp;
+      }
+      else {
+        direction.normalize(temp.length);
       }
     }
 
@@ -147,10 +157,6 @@ package ichigo {
       // Velocity is defined as speed * direction.
       pickDirection(influence);
       var velocity:Point = direction.clone();
-      var speed:Number = maxSpeed;
-      speed = Math.min(speed, Point.distance(attractor, this)/(speed*speed));
-      speed = Math.max(speed, minSpeed);
-      velocity = scale(velocity, speed);
       return velocity;
     }
 
@@ -190,7 +196,7 @@ package ichigo {
           var result:Point = behavior.func(attractor, flock, this, influence);
           if (result !== null) {
             scaleSum += behavior.scale;
-            result.normalize(behavior.scale);
+            result = scale(result, behavior.scale);
             influence.offset(result.x, result.y);
           }
         }

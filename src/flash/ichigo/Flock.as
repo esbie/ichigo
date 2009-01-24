@@ -56,5 +56,25 @@ package ichigo {
         icons.push(acquired.icons[i]);
       }
     }
+
+    public function remove(child:Flock):void {
+      var length:int = child.units.length;
+      for (var i:int = 0; i < length; i++) {
+        var index:int = units.indexOf(child.units[i]);
+        units.splice(index, 1);
+        icons.splice(index, 1);
+      }
+    }
+
+    public function includes(child:Flock):Boolean {
+      var length:int = child.units.length;
+      for (var i:int = 0; i < length; i++) {
+        var index:int = units.indexOf(child.units[i]);
+        if (index == -1)
+          return false;
+      }
+      return true;
+    }
+
   }
 }

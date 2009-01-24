@@ -12,6 +12,9 @@ package ichigo {
     public static var mousePos:Point = new Point(0, 0);
     public static var flocks:Vector.<Flock> = new Vector.<Flock>();
 
+    //variable for testing Flcok add and remove
+    public var lastAdded:Flock;
+
     public function Main () {
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -48,9 +51,14 @@ package ichigo {
         if (i != 0) {
           if (flocks[0].hitTestObject(flocks[i])) {
             flocks[0].add(flocks[i]);
+            lastAdded = flocks[i];
             flocks.splice(i, 1);
           }
         }
+      }
+      if (flocks[0].hitTestPoint(250, 250, false) && flocks[0].includes(lastAdded)) {
+        flocks[0].remove(lastAdded);
+        flocks.push(lastAdded);
       }
     }
 

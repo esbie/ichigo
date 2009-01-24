@@ -12,7 +12,7 @@ package ichigo {
     private var alignmentScale:Number = 1.0;
     private var seperationScale:Number = 1.5;
     private var cohesionScale:Number = 0.50;
-    private var avoidanceScale:Number = 0.0;
+    private var avoidanceScale:Number = 10.0;
     private var randomScale:Number = 0.0;
     private var momentumScale:Number = 0.0
     private var swirlyScale:Number = 0.0;
@@ -30,7 +30,7 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var speed:Number = 15;
+    private var speed:Number = 500;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
     private var steerResistance:Number = 0.75;
@@ -83,13 +83,24 @@ package ichigo {
     private function calcAvoidance(attractor:Point,
                                    flock:Vector.<Boid>,
                                    position:Point,
-                                  influence:Point):Point {
-      var obstacle:Point = nearestObstacle(position)
-      if (Point.distance(obstacle, position) < personalSpace) {
-        var temp:Point = subtract(obstacle);
-        return temp;
+                                   influence:Point):Point {
+      var temp:Point = new Point();
+      var obstacle:Point = nearestObstacle(position);
+      var hitVector:Point = position.subtract(obstacle);
+      var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
+                               Math.atan2(velocity.y, velocity.x);
+      //Move to the right
+      if (radianDelta > 0 && radianDelta < ( Math.PI / 6)) {
+        var theta:Number = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
+        hitVector = Point.polar(hitVector.length, theta);
       }
-      else return null;
+      //Move to the left
+      else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
+        var theta:Number = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
+        hitVector = Point.polar(hitVector.length, theta);
+      }
+      hitVector.normalize( 1 / hitVector.length);
+      return hitVector;
     }
 
     private function calcRandom(attractor:Point,
@@ -205,8 +216,8 @@ package ichigo {
     //dummy function used by calcAvoidance
     //TODO: implement nearestObstacle
     private function nearestObstacle(position:Point):Point {
-      return new Point(Math.round(position.x / 30) * 30,
-                       Math.round(position.y / 30) * 30);
+      return new Point(Math.round(position.x / 90) * 90,
+                       Math.round(position.y / 90) * 90);
     }
 
     /**

@@ -30,7 +30,7 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var speed:Number = 500;
+    private var speed:Number = 50;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
     private var steerResistance:Number = 0.75;
@@ -85,18 +85,19 @@ package ichigo {
                                    position:Point,
                                    influence:Point):Point {
       var temp:Point = new Point();
+      var theta:Number;
       var obstacle:Point = nearestObstacle(position);
       var hitVector:Point = position.subtract(obstacle);
       var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
                                Math.atan2(velocity.y, velocity.x);
       //Move to the right
       if (radianDelta > 0 && radianDelta < ( Math.PI / 6)) {
-        var theta:Number = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
+        theta = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
         hitVector = Point.polar(hitVector.length, theta);
       }
       //Move to the left
       else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
-        var theta:Number = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
+        theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
         hitVector = Point.polar(hitVector.length, theta);
       }
       hitVector.normalize( 1 / hitVector.length);

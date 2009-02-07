@@ -11,6 +11,7 @@ package ichigo {
   public class Main extends MovieClip {
     public static var mousePos:Point = new Point(0, 0);
     public static var flocks:Vector.<Flock> = new Vector.<Flock>();
+    public static var collectables:Vector.<Collectable> = new Vector.<Collectable>();
 
     //variable for testing Flcok add and remove
     public var lastAdded:Flock;
@@ -19,12 +20,6 @@ package ichigo {
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
       stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-
-      var child:MovieClip = new MovieClip();
-      child.graphics.beginFill(0xFF);
-      child.graphics.drawRoundRect(0, 0, 50, 50, 10, 10);
-      child.graphics.endFill();
-      addChild(child);
 
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
@@ -36,6 +31,10 @@ package ichigo {
 
       flocks.push(school, theirSchool, aSchool);
 
+      var test:Coin = new Coin(130, 130);
+      addChild(test);
+      collectables.push(test);
+
       buttonMode = true;
       useHandCursor = true;
       addEventListener(MouseEvent.CLICK, onRelease);
@@ -44,6 +43,7 @@ package ichigo {
     }
 
     public function update():void {
+      //tests that add works correctly for flocks
       for (var i:int = 0; i < flocks.length; i++ ) {
         flocks[i].updateFlock();
         // assumes (for the moment) that flocks[0] is the only flock
@@ -56,9 +56,16 @@ package ichigo {
           }
         }
       }
+      //tests that remove works correctly for flocks
       if (flocks[0].hitTestPoint(250, 250, false) && flocks[0].includes(lastAdded)) {
         flocks[0].remove(lastAdded);
         flocks.push(lastAdded);
+      }
+      //tests that pickUp works correctly for collectables
+      for (var j:int = 0; j < collectables.length; j++) {
+        if (flocks[0].hitTestObject(collectables[j])) {
+            collectables[j].pickUp();
+        }
       }
     }
 

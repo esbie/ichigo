@@ -65,6 +65,7 @@ package ichigo {
       for (var j:int = 0; j < collectables.length; j++) {
         if (flocks[0].hitTestObject(collectables[j])) {
             collectables[j].pickUp();
+            collectables.splice(j, 1);
         }
       }
     }

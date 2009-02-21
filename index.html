@@ -1,1 +1,28 @@
-My GitHub Page
+<html><head><title>SWF Object Loader</title>
+<script src="swfobject.js"
+  type="text/javascript"></script>
+<script type="text/javascript">
+var flashvars = {
+};
+var params = {
+};
+var attributes = {
+  allowScriptAccess: "always"
+};
+
+swfobject.embedSWF("latest.swf?t=" + (new Date()).getTime(),
+                   "swfDropzone",
+                   "100%", "100%",
+                   "7.0.0",
+                   "expressInstall.swf",
+                   flashvars, params, attributes);
+
+var trace = function (args) {
+  console[args.shift()].apply(console, args);
+}
+</script>
+</head><body>
+<div id="swfDropzone">&nbsp;</div>
+<a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">
+Configure security</a> to always trust files in our location. 
+</body></html>

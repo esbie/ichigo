@@ -17,12 +17,6 @@ package ichigo {
       stage.scaleMode = StageScaleMode.NO_SCALE;
       stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
 
-      var child:MovieClip = new MovieClip();
-      child.graphics.beginFill(0xFF);
-      child.graphics.drawRoundRect(0, 0, 50, 50, 10, 10);
-      child.graphics.endFill();
-      addChild(child);
-
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
       var theirSchool:Flock = new Flock(3, new Point(100, 100),
@@ -32,10 +26,6 @@ package ichigo {
       addChild(aSchool);
 
       flocks.push(school, theirSchool, aSchool);
-
-      buttonMode = true;
-      useHandCursor = true;
-      addEventListener(MouseEvent.CLICK, onRelease);
 
       setInterval(update, 20);
     }
@@ -52,10 +42,6 @@ package ichigo {
           }
         }
       }
-    }
-
-    public function onRelease (evt:MouseEvent):void {
-      Log.out("Clicked!");
     }
 
     public function onMouseMove(evt:MouseEvent):void {

@@ -17,10 +17,11 @@ package ichigo {
     public var lastAdded:Flock;
 
     public function Main () {
+      //setting stage parameters
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
       stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
-
+      //adding flocks
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
       var theirSchool:Flock = new Flock(3, new Point(100, 100),
@@ -36,6 +37,10 @@ package ichigo {
       collectables.push(test);
 
       setInterval(update, 20);
+
+      //setting up sound objects
+      var s:SoundPlayer = new SoundPlayer();
+      s.play();
     }
 
     public function update():void {

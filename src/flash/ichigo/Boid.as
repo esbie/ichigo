@@ -1,9 +1,10 @@
 package ichigo {
+  import flash.events.*;
   import flash.geom.Point;
 
   import ichigo.utils.Log;
 
-  public class Boid extends Point {
+  public class Boid extends Point implements IEventDispatcher {
     /*
      * These values will scale their respective vector calculations.
      * Most often, the result of the vector calculation will normalize to 0 or
@@ -36,8 +37,11 @@ package ichigo {
     private var steerResistance:Number = 0.75;
     private var personalSpace:Number = 15;
 
+    private var eventDispatcher:EventDispatcher;
+
     public function Boid(x:Number, y:Number) {
       super(x, y);
+      eventDispatcher = new EventDispatcher(this);
     }
 
     private function calcAlignment(attractor:Point,
@@ -221,6 +225,10 @@ package ichigo {
 
       // Velocity = how much we have moved in this update.
       velocity = subtract(start);
+
+      //Event Dispatcher
+      dispatchEvent(new VelocityEvent(VelocityEvent.UPDATE, velocity.clone()));
+
     }
 
     //dummy function used by calcAvoidance
@@ -241,5 +249,31 @@ package ichigo {
       }
       return pt;
     }
+
+    public function addEventListener(type:String, listener:Function,
+                                     useCapture:Boolean = false,
+                                     priority:int = 0,
+                                     useWeakReference:Boolean = false
+                                    ):void {
+      eventDispatcher.addEventListener(type, listener);
+    }
+
+    public function dispatchEvent(event:Event):Boolean {
+      return eventDispatcher.dispatchEvent(event);
+    }
+
+    public function hasEventListener(type:String):Boolean {
+      return eventDispatcher.hasEventListener(type);
+    }
+
+    public function removeEventListener(type:String, listener:Function,
+                                        useCapture:Boolean = false):void {
+      eventDispatcher.removeEventListener(type, listener);
+    }
+
+    public function willTrigger(type:String):Boolean {
+      return eventDispatcher.willTrigger(type);
+    }
+
   }
 }

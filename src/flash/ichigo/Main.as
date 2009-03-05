@@ -39,8 +39,7 @@ package ichigo {
       setInterval(update, 20);
 
       //setting up sound objects
-      var s:SoundPlayer = new SoundPlayer();
-      s.play();
+      var s:SoundPlayer = new SoundPlayer(school);
     }
 
     public function update():void {

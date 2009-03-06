@@ -10,11 +10,11 @@ package ichigo {
      * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
-    private var seperationScale:Number = 2.5;
-    private var cohesionScale:Number = 0.5;
+    private var seperationScale:Number = 0.70;
+    private var cohesionScale:Number = 0.50;
     private var avoidanceScale:Number = 0.0;
-    private var randomScale:Number = 0.0;
-    private var momentumScale:Number = 3.1;
+    private var randomScale:Number = 0.80;
+    private var momentumScale:Number = 1.0;
     private var swirlyScale:Number = 0.0;
 
     private var random:Point = new Point(0, 0);
@@ -30,12 +30,11 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var maxSpeed:Number = 5;
-    private var minSpeed:Number = 1;
+    private var speed:Number = 10;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
-    private var steerResistance:Number = .75;
-    private var personalSpace:Number = 30;
+    private var steerResistance:Number = 0.75;
+    private var personalSpace:Number = 15;
 
     public function Boid(x:Number, y:Number) {
       super(x, y);
@@ -46,6 +45,10 @@ package ichigo {
                                    position:Point,
                                    influence:Point):Point {
       var temp:Point = attractor.subtract(position);
+      //causes Boid to slow down when it's within
+      //20px of the attractor, otherwise the vector
+      //has length = 1
+      temp.normalize(Math.min(temp.length/20, 1));
       return temp;
     }
 
@@ -61,6 +64,7 @@ package ichigo {
             temp.offset(-difference.x, -difference.y);
           }
       }
+      temp.normalize(1);
       return temp.length? temp : null;
     }
 
@@ -74,19 +78,35 @@ package ichigo {
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
+      //causes Boid to slow down when it's within
+      //100px of the flock, otherwise the vector
+      //has length = 1 (i.e. tries to catch up with flock)
+      temp.normalize(Math.min(temp.length / 100, 1));
       return temp.length? temp : null;
     }
 
     private function calcAvoidance(attractor:Point,
                                    flock:Vector.<Boid>,
                                    position:Point,
-                                  influence:Point):Point {
-      var obstacle:Point = nearestObstacle(position)
-      if (Point.distance(obstacle, position) < personalSpace) {
-        var temp:Point = subtract(obstacle);
-        return temp;
+                                   influence:Point):Point {
+      var temp:Point = new Point();
+      var theta:Number;
+      var obstacle:Point = nearestObstacle(position);
+      var hitVector:Point = position.subtract(obstacle);
+      var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
+                               Math.atan2(velocity.y, velocity.x);
+      //Move to the right
+      if (radianDelta > 0 && radianDelta < (Math.PI / 6)) {
+        theta = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
+        hitVector = Point.polar(hitVector.length, theta);
       }
-      else return null;
+      //Move to the left
+      else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
+        theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
+        hitVector = Point.polar(hitVector.length, theta);
+      }
+      hitVector.normalize(1 / hitVector.length);
+      return hitVector;
     }
 
     private function calcRandom(attractor:Point,
@@ -98,11 +118,15 @@ package ichigo {
       return random;
     }
 
+    //TODO: doesn't work as expected,
+    //momentumScale seems to have no effect
     private function calcMomentum(attractor:Point,
                                   flock:Vector.<Boid>,
                                   position:Point,
                                   influence:Point):Point {
-      return velocity;
+      var temp:Point = velocity.clone();
+      temp.normalize(1);
+      return temp;
     }
 
     private function calcSwirly(attractor:Point,
@@ -128,15 +152,18 @@ package ichigo {
      * save the direction each time it picks "influence" over velocity and
      * return ignore "influence" until the boid has moved away.
      */
+    //TODO: this function no longer picks just direction
     public function pickDirection(influence:Point):void {
       var radianDelta:Number = Math.abs(Math.atan2(direction.y, direction.x) -
                                         Math.atan2(influence.y, influence.x));
-      // If direction sufficiently diverges pick a new velocity
+      influence = scale(influence, speed);
+      influence = Point.interpolate(direction, influence, steerResistance);
+      // If direction sufficiently diverges pick the new velocity
       if (radianDelta > (Math.PI / 6)) {
-        // Turn partway towards influence (steerResistance is a % of influence)
-        direction = Point.interpolate(direction, influence, steerResistance);
-        // direction should be 0 or 1.
-        direction.normalize(1);
+        direction = influence.clone();
+      }
+      else {
+        direction.normalize(influence.length);
       }
     }
 
@@ -147,10 +174,6 @@ package ichigo {
       // Velocity is defined as speed * direction.
       pickDirection(influence);
       var velocity:Point = direction.clone();
-      var speed:Number = maxSpeed;
-      speed = Math.min(speed, Point.distance(attractor, this)/(speed*speed));
-      speed = Math.max(speed, minSpeed);
-      velocity = scale(velocity, speed);
       return velocity;
     }
 
@@ -190,7 +213,7 @@ package ichigo {
           var result:Point = behavior.func(attractor, flock, this, influence);
           if (result !== null) {
             scaleSum += behavior.scale;
-            result.normalize(behavior.scale);
+            result = scale(result, behavior.scale);
             influence.offset(result.x, result.y);
           }
         }
@@ -203,8 +226,8 @@ package ichigo {
     //dummy function used by calcAvoidance
     //TODO: implement nearestObstacle
     private function nearestObstacle(position:Point):Point {
-      return new Point(Math.round(position.x / 30) * 30,
-                       Math.round(position.y / 30) * 30);
+      return new Point(Math.round(position.x / 90) * 90,
+                       Math.round(position.y / 90) * 90);
     }
 
     /**

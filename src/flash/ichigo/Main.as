@@ -35,10 +35,6 @@ package ichigo {
       addChild(test);
       collectables.push(test);
 
-      buttonMode = true;
-      useHandCursor = true;
-      addEventListener(MouseEvent.CLICK, onRelease);
-
       setInterval(update, 20);
     }
 
@@ -68,10 +64,6 @@ package ichigo {
             collectables.splice(j, 1);
         }
       }
-    }
-
-    public function onRelease (evt:MouseEvent):void {
-      Log.out("Clicked!");
     }
 
     public function onMouseMove(evt:MouseEvent):void {

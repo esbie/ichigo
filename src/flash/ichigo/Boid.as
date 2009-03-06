@@ -96,7 +96,7 @@ package ichigo {
       var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
                                Math.atan2(velocity.y, velocity.x);
       //Move to the right
-      if (radianDelta > 0 && radianDelta < ( Math.PI / 6)) {
+      if (radianDelta > 0 && radianDelta < (Math.PI / 6)) {
         theta = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
         hitVector = Point.polar(hitVector.length, theta);
       }
@@ -105,7 +105,7 @@ package ichigo {
         theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
         hitVector = Point.polar(hitVector.length, theta);
       }
-      hitVector.normalize( 1 / hitVector.length);
+      hitVector.normalize(1 / hitVector.length);
       return hitVector;
     }
 

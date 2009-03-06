@@ -10,11 +10,11 @@ package ichigo {
      * `Scale` length.
      */
     private var alignmentScale:Number = 1.0;
-    private var seperationScale:Number = 1.5;
+    private var seperationScale:Number = 0.70;
     private var cohesionScale:Number = 0.50;
-    private var avoidanceScale:Number = 10.0;
-    private var randomScale:Number = 0.0;
-    private var momentumScale:Number = 0.0
+    private var avoidanceScale:Number = 0.0;
+    private var randomScale:Number = 0.80;
+    private var momentumScale:Number = 1.0;
     private var swirlyScale:Number = 0.0;
 
     private var random:Point = new Point(0, 0);
@@ -30,7 +30,7 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     private var velocity:Point = new Point(0, 0);
-    private var speed:Number = 50;
+    private var speed:Number = 10;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
     private var steerResistance:Number = 0.75;
@@ -45,7 +45,9 @@ package ichigo {
                                    position:Point,
                                    influence:Point):Point {
       var temp:Point = attractor.subtract(position);
-      //TODO: take out magic 20
+      //causes Boid to slow down when it's within
+      //20px of the attractor, otherwise the vector
+      //has length = 1
       temp.normalize(Math.min(temp.length/20, 1));
       return temp;
     }
@@ -62,7 +64,7 @@ package ichigo {
             temp.offset(-difference.x, -difference.y);
           }
       }
-      temp.normalize(0.5);
+      temp.normalize(1);
       return temp.length? temp : null;
     }
 
@@ -76,6 +78,9 @@ package ichigo {
       }
       temp.x = temp.x / flock.length - position.x;
       temp.y = temp.y / flock.length - position.y;
+      //causes Boid to slow down when it's within
+      //100px of the flock, otherwise the vector
+      //has length = 1 (i.e. tries to catch up with flock)
       temp.normalize(Math.min(temp.length / 100, 1));
       return temp.length? temp : null;
     }
@@ -113,11 +118,15 @@ package ichigo {
       return random;
     }
 
+    //TODO: doesn't work as expected,
+    //momentumScale seems to have no effect
     private function calcMomentum(attractor:Point,
                                   flock:Vector.<Boid>,
                                   position:Point,
                                   influence:Point):Point {
-      return velocity;
+      var temp:Point = velocity.clone();
+      temp.normalize(1);
+      return temp;
     }
 
     private function calcSwirly(attractor:Point,

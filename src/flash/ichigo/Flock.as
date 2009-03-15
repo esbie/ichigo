@@ -45,7 +45,9 @@ package ichigo {
         // Direction is a unit vector pointing in the direction of movement.
         var direction:Point = units[i].direction;
         // Convert vector to radians then degrees.
-        icons[i].rotation = Math.atan2(direction.y, direction.x)/Math.PI * 180;
+        icons[i].rotation = Math.atan2(direction.y, direction.x) / Math.PI * 180;
+
+        dispatchEvent(new VelocityEvent(VelocityEvent.UPDATE, units[i].velocity));
       }
     }
 

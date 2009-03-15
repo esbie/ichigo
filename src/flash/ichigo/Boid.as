@@ -4,7 +4,7 @@ package ichigo {
 
   import ichigo.utils.Log;
 
-  public class Boid extends Point implements IEventDispatcher {
+  public class Boid extends Point {
     /*
      * These values will scale their respective vector calculations.
      * Most often, the result of the vector calculation will normalize to 0 or
@@ -30,18 +30,15 @@ package ichigo {
     private var swirlyRadius:Number = Math.random()*.6 - .3;
     private var swirlyTheta:Number = 0.0;
 
-    private var velocity:Point = new Point(0, 0);
+    public var velocity:Point = new Point(0, 0);
     private var speed:Number = 10;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
     private var steerResistance:Number = 0.75;
     private var personalSpace:Number = 15;
 
-    private var eventDispatcher:EventDispatcher;
-
     public function Boid(x:Number, y:Number) {
       super(x, y);
-      eventDispatcher = new EventDispatcher(this);
     }
 
     private function calcAlignment(attractor:Point,
@@ -222,13 +219,8 @@ package ichigo {
           }
         }
       }
-
       // Velocity = how much we have moved in this update.
       velocity = subtract(start);
-
-      //Event Dispatcher
-      dispatchEvent(new VelocityEvent(VelocityEvent.UPDATE, velocity.clone()));
-
     }
 
     //dummy function used by calcAvoidance
@@ -249,31 +241,5 @@ package ichigo {
       }
       return pt;
     }
-
-    public function addEventListener(type:String, listener:Function,
-                                     useCapture:Boolean = false,
-                                     priority:int = 0,
-                                     useWeakReference:Boolean = false
-                                    ):void {
-      eventDispatcher.addEventListener(type, listener);
-    }
-
-    public function dispatchEvent(event:Event):Boolean {
-      return eventDispatcher.dispatchEvent(event);
-    }
-
-    public function hasEventListener(type:String):Boolean {
-      return eventDispatcher.hasEventListener(type);
-    }
-
-    public function removeEventListener(type:String, listener:Function,
-                                        useCapture:Boolean = false):void {
-      eventDispatcher.removeEventListener(type, listener);
-    }
-
-    public function willTrigger(type:String):Boolean {
-      return eventDispatcher.willTrigger(type);
-    }
-
   }
 }

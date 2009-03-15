@@ -12,7 +12,7 @@
         private var song:SoundChannel;
 
         public function SoundPlayer(flock:Flock) {
-          flock.units[0].addEventListener(VelocityEvent.UPDATE, velocityHandler);
+          flock.addEventListener(VelocityEvent.UPDATE, velocityHandler);
         }
 
         public function play():void {
@@ -39,7 +39,7 @@
         }
 
         private function velocityHandler(event:VelocityEvent):void {
-          if (event.velocity.x >= 6) {
+          if (event.velocity.x >= 8) {
             play();
           }
         }

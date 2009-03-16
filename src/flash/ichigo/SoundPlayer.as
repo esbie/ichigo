@@ -5,6 +5,7 @@
     import flash.media.SoundChannel;
     import flash.media.SoundTransform;
     import flash.net.URLRequest;
+    import flash.geom.Point;
 
     import ichigo.utils.Log;
 

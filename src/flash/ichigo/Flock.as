@@ -47,7 +47,7 @@ package ichigo {
         // Convert vector to radians then degrees.
         icons[i].rotation = Math.atan2(direction.y, direction.x) / Math.PI * 180;
 
-        dispatchEvent(new VelocityEvent(VelocityEvent.UPDATE, units[i].velocity));
+        dispatchEvent(new Event(Event.CHANGE));
       }
     }
 

@@ -34,7 +34,7 @@ package ichigo {
     private var speed:Number = 10;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
-    private var steerResistance:Number = 0.75;
+    private var steerResistance:Number = 0.95;
     private var personalSpace:Number = 15;
 
     public function Boid(x:Number, y:Number) {

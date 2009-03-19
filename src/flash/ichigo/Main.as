@@ -50,6 +50,7 @@ package ichigo {
         // we want to test for collisions
         if (i != 0) {
           if (flocks[0].hitTestObject(flocks[i])) {
+            dispatchEvent(new Event(Event.ADDED));
             flocks[0].add(flocks[i]);
             lastAdded = flocks[i];
             flocks.splice(i, 1);
@@ -58,6 +59,7 @@ package ichigo {
       }
       //tests that remove works correctly for flocks
       if (flocks[0].hitTestPoint(250, 250, false) && flocks[0].includes(lastAdded)) {
+        dispatchEvent(new Event(Event.REMOVED));
         flocks[0].remove(lastAdded);
         flocks.push(lastAdded);
       }

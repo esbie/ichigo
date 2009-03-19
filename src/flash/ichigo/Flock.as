@@ -51,6 +51,19 @@ package ichigo {
       }
     }
 
+    public function getDirectionAvg():Point {
+      var i:int = units.length;
+      var directionAvg:Point = new Point(0, 0);
+      while (i--){
+        var direction:Point = units[i].direction.clone();
+        direction.normalize(1);
+        directionAvg = directionAvg.add(direction);
+      }
+      directionAvg.x = directionAvg.x/units.length;
+      directionAvg.y = directionAvg.y/units.length;
+      return directionAvg;
+    }
+
     public function add(acquired:Flock):void {
       var length:int = acquired.units.length;
       for (var i:int = 0; i < length; i++) {

@@ -15,27 +15,17 @@
         private var soundFactory:Sound;
         private var isPlaying:Boolean = false;
 
+        private var sb:SoundBox;
+
         public function SoundPlayer(flock:Flock) {
-          flock.addEventListener(Event.CHANGE, velocityHandler);
-            var request:URLRequest = new URLRequest(url);
-            soundFactory = new Sound();
-            soundFactory.load(request);
+          flock.addEventListener(Event.CHANGE, directionAverage);
+          sb = new SoundBox(url);
         }
 
-        public function play(volume:Number):void {
-            song = soundFactory.play();
-            song.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
-            song.soundTransform = new SoundTransform(volume, 0);
-            isPlaying = true;
-        }
-        private function soundCompleteHandler(event:Event):void {
-          isPlaying = false;
-        }
-
-        private function velocityHandler(event:Event):void {
+        private function directionAverage(event:Event):void {
           var avg:Point = event.target.getDirectionAvg();
-          if (avg.length >= 0.75 && !isPlaying ) {
-            play(avg.length*avg.length*avg.length*0.05);
+          if (avg.length >= 0.75 && !sb.isPlaying ) {
+            sb.play(avg.length*avg.length*avg.length*0.1,0);
           }
         }
     }

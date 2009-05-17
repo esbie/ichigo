@@ -21,6 +21,7 @@ package ichigo {
       stage.align     = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
       stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+      stage.addEventListener(MouseEvent.CLICK, onMouseClick);
       //adding flocks
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
@@ -31,10 +32,6 @@ package ichigo {
       addChild(aSchool);
 
       flocks.push(school, theirSchool, aSchool);
-
-      var test:Coin = new Coin(130, 130);
-      addChild(test);
-      collectables.push(test);
 
       setInterval(update, 20);
 
@@ -75,6 +72,29 @@ package ichigo {
     public function onMouseMove(evt:MouseEvent):void {
       mousePos.x = evt.stageX;
       mousePos.y = evt.stageY;
+    }
+
+    public function onMouseClick(evt:MouseEvent):void {
+      var pointOfOrigin:Point = new Point(evt.stageX, evt.stageY);
+      var min:Number = Math.min(evt.stageX, evt.stageY, stage.stageWidth - evt.stageX,
+                                                        stage.stageHeight - evt.stageY);
+      switch(min) {
+        case evt.stageX:
+          pointOfOrigin.x -= min + 20;
+          break;
+        case evt.stageY:
+          pointOfOrigin.y -= min + 20;
+          break;
+        case stage.stageWidth - evt.stageX:
+          pointOfOrigin.x += min + 20;
+          break;
+        case stage.stageHeight - evt.stageY:
+          pointOfOrigin.y += min + 20;
+          break;
+      }
+      var school:Flock = new Flock(1, new Point(evt.localX, evt.localY), pointOfOrigin);
+      addChild(school);
+      flocks[0].add(school);
     }
   }
 }

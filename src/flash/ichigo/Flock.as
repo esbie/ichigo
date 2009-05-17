@@ -54,13 +54,12 @@ package ichigo {
     public function getDirectionAvg():Point {
       var i:int = units.length;
       var directionAvg:Point = new Point(0, 0);
-      while (i--){
+      while (i--) {
         var direction:Point = units[i].direction.clone();
         direction.normalize(1);
         directionAvg = directionAvg.add(direction);
       }
-      directionAvg.x = directionAvg.x/units.length;
-      directionAvg.y = directionAvg.y/units.length;
+      directionAvg.normalize(directionAvg.length / units.length);
       return directionAvg;
     }
 

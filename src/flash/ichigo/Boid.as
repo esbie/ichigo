@@ -1,6 +1,7 @@
 package ichigo {
   import flash.events.*;
   import flash.geom.Point;
+  import ichigo.Main;
 
   import ichigo.utils.Log;
 
@@ -10,10 +11,10 @@ package ichigo {
      * Most often, the result of the vector calculation will normalize to 0 or
      * `Scale` length.
      */
-    private var alignmentScale:Number = 1.0;
+    private var alignmentScale:Number = 1.3;
     private var seperationScale:Number = 0.70;
     private var cohesionScale:Number = 0.50;
-    private var avoidanceScale:Number = 0.0;
+    private var avoidanceScale:Number = 1.5;
     private var randomScale:Number = 0.80;
     private var momentumScale:Number = 1.0;
     private var swirlyScale:Number = 0.0;
@@ -31,7 +32,7 @@ package ichigo {
     private var swirlyTheta:Number = 0.0;
 
     public var velocity:Point = new Point(0, 0);
-    private var speed:Number = 10;
+    private var speed:Number = 12;
     public var direction:Point = new Point(1, 0);
     // At steerResistance = 1 the boid cannot turn. At 0, boid turns instantly.
     private var steerResistance:Number = 0.95;
@@ -92,22 +93,27 @@ package ichigo {
                                    influence:Point):Point {
       var temp:Point = new Point();
       var theta:Number;
-      var obstacle:Point = nearestObstacle(position);
+      var obstacle:Point = Environment.nearestObstacle(position);
       var hitVector:Point = position.subtract(obstacle);
-      var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
-                               Math.atan2(velocity.y, velocity.x);
-      //Move to the right
-      if (radianDelta > 0 && radianDelta < (Math.PI / 6)) {
-        theta = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
-        hitVector = Point.polar(hitVector.length, theta);
-      }
-      //Move to the left
+      //100 = how far they can see obstacles ahead
+      if(hitVector.length < 100){
+        var radianDelta:Number = Math.atan2(hitVector.y, hitVector.x) -
+                                 Math.atan2(velocity.y, velocity.x);
+        //Move to the right
+        if (radianDelta > 0 && radianDelta < (Math.PI / 6)) {
+          theta = Math.atan2(velocity.y, velocity.x) + (Math.PI / 6 - radianDelta);
+          hitVector = Point.polar(hitVector.length, theta);
+        }
+        //Move to the left
       else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
         theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
         hitVector = Point.polar(hitVector.length, theta);
       }
-      hitVector.normalize(1 / hitVector.length);
+      hitVector.normalize(1);
       return hitVector;
+      } else {
+        return new Point(0, 0);
+      }
     }
 
     private function calcRandom(attractor:Point,
@@ -221,13 +227,6 @@ package ichigo {
       }
       // Velocity = how much we have moved in this update.
       velocity = subtract(start);
-    }
-
-    //dummy function used by calcAvoidance
-    //TODO: implement nearestObstacle
-    private function nearestObstacle(position:Point):Point {
-      return new Point(Math.round(position.x / 90) * 90,
-                       Math.round(position.y / 90) * 90);
     }
 
     /**

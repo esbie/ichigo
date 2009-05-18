@@ -13,7 +13,7 @@ package ichigo {
     public static var flocks:Vector.<Flock> = new Vector.<Flock>();
     public static var collectables:Vector.<Collectable> = new Vector.<Collectable>();
 
-    //variable for testing Flcok add and remove
+    //variable for testing Flock add and remove
     public var lastAdded:Flock;
 
     public function Main () {
@@ -22,6 +22,10 @@ package ichigo {
       stage.scaleMode = StageScaleMode.NO_SCALE;
       stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
       stage.addEventListener(MouseEvent.CLICK, onMouseClick);
+
+      var rock:Rock = new Rock(349, 248);
+      Environment.addObstacle(rock, this);
+
       //adding flocks
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
@@ -75,23 +79,8 @@ package ichigo {
     }
 
     public function onMouseClick(evt:MouseEvent):void {
-      var pointOfOrigin:Point = new Point(evt.stageX, evt.stageY);
-      var min:Number = Math.min(evt.stageX, evt.stageY, stage.stageWidth - evt.stageX,
-                                                        stage.stageHeight - evt.stageY);
-      switch(min) {
-        case evt.stageX:
-          pointOfOrigin.x -= min + 20;
-          break;
-        case evt.stageY:
-          pointOfOrigin.y -= min + 20;
-          break;
-        case stage.stageWidth - evt.stageX:
-          pointOfOrigin.x += min + 20;
-          break;
-        case stage.stageHeight - evt.stageY:
-          pointOfOrigin.y += min + 20;
-          break;
-      }
+      //adding a Boid to the flock
+      var pointOfOrigin:Point = new Point(Math.random()*stage.stageWidth, Math.random()*stage.stageHeight);
       var school:Flock = new Flock(1, new Point(evt.localX, evt.localY), pointOfOrigin);
       addChild(school);
       flocks[0].add(school);

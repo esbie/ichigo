@@ -105,12 +105,12 @@ package ichigo {
           hitVector = Point.polar(hitVector.length, theta);
         }
         //Move to the left
-      else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
-        theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
-        hitVector = Point.polar(hitVector.length, theta);
-      }
-      hitVector.normalize(1);
-      return hitVector;
+        else if (radianDelta < 0 && radianDelta > ( - Math.PI / 6)) {
+          theta = Math.atan2(velocity.y, velocity.x) - (Math.PI / 6 - radianDelta);
+          hitVector = Point.polar(hitVector.length, theta);
+        }
+        hitVector.normalize(1);
+        return hitVector;
       } else {
         return new Point(0, 0);
       }

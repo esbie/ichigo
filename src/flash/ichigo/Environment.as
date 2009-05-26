@@ -1,13 +1,11 @@
 ﻿package ichigo {
-  import flash.display.MovieClip;
+  import flash.display.DisplayObject;
   import flash.geom.Point;
-  import ichigo.utils.Log;
 
-  public class Environment extends MovieClip {
-    public static var obstacles:Vector.<MovieClip> = new Vector.<MovieClip>();
+  public class Environment {
+    public static var obstacles:Vector.<DisplayObject> = new Vector.<DisplayObject>();
 
-    public static function addObstacle(ob:MovieClip, parent:MovieClip):void {
-      parent.addChild(ob);
+    public static function addObstacle(ob:DisplayObject):void {
       Environment.obstacles.push(ob);
     }
 

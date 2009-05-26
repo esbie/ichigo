@@ -24,7 +24,8 @@ package ichigo {
       stage.addEventListener(MouseEvent.CLICK, onMouseClick);
 
       var rock:Rock = new Rock(349, 248);
-      Environment.addObstacle(rock, this);
+      addChild(rock);
+      Environment.addObstacle(rock);
 
       //adding flocks
       var school:Flock = new Flock(12, mousePos, new Point(300,300));

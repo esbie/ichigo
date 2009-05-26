@@ -16,7 +16,7 @@
       var avg:Point = event.target.getDirectionAvg();
       if (sb.isPlaying) {
         sb.setVol(avg.length * avg.length * avg.length * 0.1);
-      } else if (avg.length >= 0.75 && !sb.isPlaying ) {
+      } else if (avg.length >= 0.75 && !sb.isPlaying) {
         //basing volume on an exponential function of direction average
         sb.play(avg.length*avg.length*avg.length*0.1,0);
       }

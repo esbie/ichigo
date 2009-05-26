@@ -27,6 +27,10 @@ package ichigo {
       addChild(rock);
       Environment.addObstacle(rock);
 
+      var rock2:Rock = new Rock(549, 448);
+      addChild(rock2);
+      Environment.addObstacle(rock2);
+
       //adding flocks
       var school:Flock = new Flock(12, mousePos, new Point(300,300));
       addChild(school);
